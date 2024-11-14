@@ -24,7 +24,7 @@ labels = [
     "3-chopsticks",
     "3-butt",
     "3-mask"]
-model_path = "weights/competition.onnx"
+model_path = "../weights/competition.onnx"
 label_key = list(range(22))
 APP = Detect(model_path=model_path, label_key=label_key, label_value=labels)
 

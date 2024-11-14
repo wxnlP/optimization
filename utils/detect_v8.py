@@ -33,14 +33,14 @@ class Detect():
                 self.data.add_properties(boxes.cls.numel(), boxes.cls, confidence=boxes.conf, coordinate_x=coordinate_x, coordinate_y=coordinate_y)
 
             else:
-                print("未检测到")    
-            
+                print("未检测到")
+            self.frame = result.plot()
         self.data.show_properties()
-        self.frame = result.plot()
+
         if kd:
             return self.data
         else:
-            return result.plot()
+            return self.frame
             
     def get_capFrame(self):
         return self.frame
@@ -70,20 +70,3 @@ class Detect():
                 break
                 
             
-
-
-if __name__ == "__main__":
-    model_path = "/home/sunrise/v8/weights/insulator.onnx"
-    pic_path = [
-        "/home/sunrise/v8/pic/0049.jpg",
-        "/home/sunrise/v8/pic/0082.jpg",
-        "/home/sunrise/v8/pic/0120.jpg",
-        "/home/sunrise/v8/pic/0122.jpg",
-        "/home/sunrise/v8/pic/0164.jpg",
-        "/home/sunrise/v8/pic/0183.jpg"
-        ]
-    label_dic = {0: "instulator"}
-    app = Detect(model_path=model_path, label_dic=label_dic)
-    # for i in pic_path:
-    #     app.get_pic(i)
-    app.get_cap()
