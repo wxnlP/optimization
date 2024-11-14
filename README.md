@@ -16,7 +16,7 @@
 |--v5lite.py (yolov5-lite示例)
 ```
 
-
+可以去我的文档网站学习模型训练：[YOLO模型训练](https://tonmoon.top/study/yolov5/1/)
 
 ## 克隆源码
 
