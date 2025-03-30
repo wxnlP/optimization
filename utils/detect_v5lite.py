@@ -3,7 +3,26 @@ import numpy as np
 import onnxruntime as ort
 import time
 import random as rd
-from data import DetectData_v5
+
+class DetectData_v5:
+    def __init__(self):
+        """ 自定义检测数据类型
+        name = 零件名称
+        kind = 缺陷类别
+        coordinate_x = x坐标
+        coordinate_y = y坐标
+        confidence = 置信度
+        """
+        self.name = "0"
+        self.coordinate_x = 0
+        self.coordinate_y = 0
+        self.confidence = 0
+
+    def show(self):
+        print(f"物件名称--{self.name}")
+        print(f"中心坐标X--{self.coordinate_x}")
+        print(f"中心坐标Y--{self.coordinate_y}")
+        print(f"置信度--{self.confidence}")
 
 
 # 创建目标检测数据存储对象
@@ -139,12 +158,13 @@ class Detect:
         t2 = time.time()
         print("-"*50)
         for box,score,id in zip(det_boxes,scores,ids):
+            print(f'----------{box} -- {score} -- {id}')
             label = '%s:%.2f'%(self.label_dic[id.item()],score)
             # 物品名称
             detect_data.name = self.label_dic[id.item()]
             # 取中心坐标
-            detect_data.coordinate_x = ((box[0] + box[2])*0.5).round(2)
-            detect_data.coordinate_y = ((box[1] + box[3])*0.5).round(2)
+            detect_data.coordinate_x = ((box[0][0] + box[0][2])*0.5).round(2)
+            detect_data.coordinate_y = ((box[0][1] + box[0][3])*0.5).round(2)
             # 置信度
             detect_data.confidence = score.round(2)
             # 显示检测数据
@@ -152,9 +172,8 @@ class Detect:
             plot_one_box(box.astype(np.int16), img0, color=(0,0,255), label=label, line_thickness=None)
             id = id.item()
         str_FPS = "FPS: %.2f"%(1./(t2-t1))
-        # cv2.putText(img0,str_FPS,(50,50),cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
+        cv2.putText(img0,str_FPS,(50,50),cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
         # cv2.imwrite('/home/sunrise/DefectDetect/pic/output.jpg', img0)
-        
         print(str_FPS)
         if ch:
             return detect_data
