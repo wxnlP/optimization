@@ -35,12 +35,18 @@ cap = cv2.VideoCapture(video)
 while True:
     success, img = cap.read()
     if success:
-        data = APP.detect_pic(img, ch=1)
+        data = APP.detect_pic(img)
         print("*" * 50)
-        data.show()
+        # 返回值使用方法
+        print(data[0].name)
+
 """照片处理示例"""
-# img = cv2.imread("/home/sunrise/DefectDetect/pic/test.jpg")
-# APP.detect_pic(img)
+# img = cv2.imread("/home/pi/optimization/pic/image.png")
+# data = APP.detect_pic(img)
+# cv2.imwrite('/home/pi/optimization/results/result_v5lite.jpg', img)
+# print(data)
+
+
 """视频处理示例"""
 # cap = cv2.VideoCapture('/home/sunrise/DefectDetect/videos/2.mp4')
 # APP.detect_video('/home/sunrise/DefectDetect/videos/2.mp4')
