@@ -3,7 +3,7 @@
 ```
 |--pic (测试图片)
 |--utils
-  |--data.py (自定义数据类型函数库)
+  |--data.py (已融合到推理代码封装)
   |--detect_v5lite.py (yolov5_lite推理代码封装)
   |--detect_v8.py (yolov8推理代码封装)
 |--video (测试视频)
@@ -51,6 +51,7 @@ pip install ultralytics
 
 ```python
 from utils.detect_v5lite import Detect
+import cv2
 
 """ 对象初始化，对应传入参数如下
 	label_value: "训练是列的标签，注意自己的顺序"
@@ -95,9 +96,9 @@ APP = Detect(model_path=model_path, label_key=label_key, label_value=labels)
 
 ```python
 # 续 “初始化” 后
-# 照片识别，ch参数--1:返回DetectData数据类型--0:返回img数据（默认ch=0）
-APP.detect_pic(img, ch=1)
-# 视频处理，传入视频地址--默认输出视频存放地址--'/home/sunrise/DefectDetect/videos/output_video.mp4'
+# 照片识别
+APP.detect_pic(img)
+# 视频处理，传入视频地址--默认输出视频存放地址--'/home/pi/optimization/video/output_video.mp4'
 # 根据设备自行修改
 APP.detect_video(path)
 ```
@@ -112,17 +113,23 @@ cap = cv2.VideoCapture(video)
 while True:
     success, img = cap.read()
     if success:
-        data = APP.detect_pic(img, ch=1)
-        print("*"*50)
-        data.show()
+        data = APP.detect_pic(img)
+        print("*" * 50)
+        # 返回值使用方法
+        print(data[0].name)
 ```
 
 ### 单个照片处理
 
 ```python
 """照片处理示例"""
-img = cv2.imread(pic_path)
-APP.detect_pic(img)
+img = cv2.imread("/home/pi/optimization/pic/image.png")
+data = APP.detect_pic(img)
+# 保存检测图像
+cv2.imwrite('/home/pi/optimization/results/result_v5lite.jpg', img)
+# 返回值使用方法
+print(data[0].name)
+
 ```
 
 ### 视频处理
@@ -152,7 +159,7 @@ part_label = [3]
 APP = Detect(model_path=model_path, label_dic=label_dic, parts=part_label)
 ```
 
-【1】: 因为数据集中`0-2`为缺陷，为`3`为产品名称，故为了排除`3`显示为缺陷，特定了`parts`参数，不适应这个功能可以忽略传入空列表即可。
+【1】: 因为数据集中`0-2`为缺陷，为`3`为产品名称，故为了排除`3`显示为缺陷，特定了`parts`参数，不使用这个功能可以忽略传入空列表即可。
 
 ### detect_v8使用
 
@@ -163,7 +170,6 @@ APP = Detect(model_path=model_path, label_dic=label_dic, parts=part_label)
 APP.get_pic(pic_path, kd=1)
 # 获取当前帧，照片数据（cv2可读取），便于同时获取 “自定义DetectData数据” “照片数据”
 APP.get_capFrame()
-# 
 ```
 
 ### 多照片推理
