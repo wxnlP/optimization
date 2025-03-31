@@ -6,12 +6,14 @@ import random as rd
 
 class DetectData_v5:
     def __init__(self):
-        """ 自定义检测数据类型
-        name = 零件名称
-        kind = 缺陷类别
-        coordinate_x = x坐标
-        coordinate_y = y坐标
-        confidence = 置信度
+        """ 
+        自定义检测数据类型
+
+        Attributes:
+            name: 检测结果的名称
+            coordinate_x: 检测结果的中心x坐标
+            coordinate_y:  检测结果的中心y坐标
+            confidence: 检测结果的置信度
         """
         self.name = "0"
         self.coordinate_x = 0
@@ -27,7 +29,8 @@ class DetectData_v5:
 
 # 创建目标检测数据存储对象
 detect_data = DetectData_v5()
-        
+
+"""此部分函数为推理处理部分，非专业人士不建议修改"""
 def plot_one_box(x, img, color=None, label=None, line_thickness=None):
     """
     description: Plots one bounding box on image img,
@@ -128,7 +131,16 @@ def infer_img(img0,net,model_h,model_w,nl,na,stride,anchor_grid,thred_nms=0.4,th
  
     return  boxes,confs,ids
  
+
 class Detect:
+    """
+    yolov5-lite推理封装类，可以进行单个照片、单个视频、实时推理任务。
+    
+    Args:
+        model_path: 训练的推理模型路径，linux建议使用绝对路径
+        label_key: 标签字典的键，使用列表表示
+        label_value: 标签字典的键值，使用列表表示
+    """
     def __init__(self, model_path, label_key, label_value):
         self.model_pb_path = model_path
         self.label_key = label_key
@@ -148,17 +160,31 @@ class Detect:
 
 
     def Init(self):
+        """
+        模型标签的初始化
+        """
         for i in range(len(self.label_key)):
             self.label_dic[i] = self.lable_value[i]
 
     
     def detect_pic(self, img0, ch=0):
+        """
+        单张照片推理函数
+
+        进行实时检测时，将此函数放到一个循环中即可
+
+        Args:
+            img0: 要检测的图像数据，opencv类型，其他类型请先进行类型转换
+
+        Returns:
+            返回自定义数据结构 DetectData_v5 的列表，每个成员均是一个 DetectData_v5 对象
+        """
         t1 = time.time()
         det_boxes,scores,ids = infer_img(img0,self.net,self.model_h,self.model_w,self.nl,self.na,self.stride,self.anchor_grid,thred_nms=0.4,thred_cond=0.5)
         t2 = time.time()
+        data_list = []
         print("-"*50)
         for box,score,id in zip(det_boxes,scores,ids):
-            print(f'----------{box} -- {score} -- {id}')
             label = '%s:%.2f'%(self.label_dic[id.item()],score)
             # 物品名称
             detect_data.name = self.label_dic[id.item()]
@@ -167,20 +193,27 @@ class Detect:
             detect_data.coordinate_y = ((box[0][1] + box[0][3])*0.5).round(2)
             # 置信度
             detect_data.confidence = score.round(2)
-            # 显示检测数据
+            # 显示推理结果
             detect_data.show()
+            # 汇总结果
+            data_list.append(detect_data)
+            # 绘制检测框
             plot_one_box(box.astype(np.int16), img0, color=(0,0,255), label=label, line_thickness=None)
             id = id.item()
         str_FPS = "FPS: %.2f"%(1./(t2-t1))
         cv2.putText(img0,str_FPS,(50,50),cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
-        # cv2.imwrite('/home/sunrise/DefectDetect/pic/output.jpg', img0)
         print(str_FPS)
-        if ch:
-            return detect_data
-        else:
-            return img0
+        return data_list
+
     
-    def detect_video(self, video):
+    def detect_video(self, video, save_path='/home/pi/optimization/video/output_video.mp4'):
+        """
+        视频推理
+
+        Args:
+            video: 要进行推理的视频
+            save_path: 保存推理结果的路径，默认为'/home/pi/optimization/video/output_video.mp4'
+        """
         cap = cv2.VideoCapture(video)
         # 获取视频的宽度、高度和帧率
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -189,7 +222,7 @@ class Detect:
 
         # 创建视频写入对象
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # 使用 mp4v 编码格式
-        out = cv2.VideoWriter('/home/sunrise/DefectDetect/videos/output_video.mp4', fourcc, fps, (width, height))
+        out = cv2.VideoWriter(save_path, fourcc, fps, (width, height))
         while True: 
             ret, frame = cap.read()
             print(ret)
@@ -201,47 +234,5 @@ class Detect:
             cv2.waitKey(int(1000 / (fps*3)))  # 控制播放速度，保持帧率
          
 
-if __name__ == "__main__":
-    labels = [
-        "0-plastic_bottle",
-        "0-drink_can",
-        "0-paper",
-        "0-carton",
-        "0-milkCarton",
-        "1-pericarp",
-        "1-vegetable_leaf",
-        "1-radish",
-        "1-potato",
-        "1-fruits",
-        "2-battery",
-        "2-Expired_drug",
-        "2-button cell",
-        "2-thermometer",
-        "3-tile",
-        "3-cobblestone",
-        "3-brick",
-        "3-paperCup",
-        "3-tableware",
-        "3-chopsticks",
-        "3-butt",
-        "3-mask"]
-    model_path = ""
-    label_key = list(range(22))
-    APP = Detect(model_path=model_path, label_key=label_key, label_value=labels)
-    """摄像头处理示例"""
-    video = 0
-    cap = cv2.VideoCapture(video)
-    while True:
-        success, img = cap.read()
-        if success:
-            data = APP.detect_pic(img, ch=1)
-            print("*"*50)
-            data.show()
-    """照片处理示例"""
-    # img = cv2.imread("/home/sunrise/DefectDetect/pic/test.jpg")
-    # APP.detect_pic(img)
-    """视频处理示例"""
-    # cap = cv2.VideoCapture('/home/sunrise/DefectDetect/videos/2.mp4')
-    # APP.detect_video('/home/sunrise/DefectDetect/videos/2.mp4')
     
     
