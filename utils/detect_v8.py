@@ -1,4 +1,3 @@
-from utils.data import DetectData
 from ultralytics import YOLO
 import cv2
 
